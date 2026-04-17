@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Top Trumps: 2025-26 College Basketball</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --card-bg: #141929;
+    --card-border: #2a3a6e;
+    --accent: #f5a623;
+    --accent2: #4fc3f7;
+    --green: #43e97b;
+    --red: #f44336;
+    --text: #e8eaf6;
+    --sub: #8899cc;
+    --btn-bg: #1e2d5a;
+    --btn-hover: #2e4490;
+    --win-glow: 0 0 24px 4px #43e97b88;
+    --lose-glow: 0 0 24px 4px #f4433688;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    width: 100%;
+    background: linear-gradient(135deg, #0d1b4b 0%, #1a0a3d 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 16px 24px;
+    text-align: center;
+  }
+  header h1 {
+    font-size: clamp(1.1rem, 4vw, 1.8rem);
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  header p { color: var(--sub); font-size: 0.85rem; margin-top: 4px; }
+
+  #scoreboard {
+    display: flex;
+    gap: 16px;
+    margin: 16px 0 8px;
+    font-size: 0.9rem;
+  }
+  .score-box {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 8px 18px;
+    text-align: center;
+  }
+  .score-box span { display: block; }
+  .score-box .label { color: var(--sub); font-size: 0.75rem; text-transform: uppercase; }
+  .score-box .val { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+  #turn-indicator {
+    background: var(--btn-bg);
+    border: 1px solid var(--accent2);
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-size: 0.85rem;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+
+  #arena {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    width: 100%;
+    max-width: 860px;
+  }
+
+  .card-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .card-label { font-size: 0.75rem; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; }
+
+  .card {
+    background: linear-gradient(160deg, #1a2a5e 0%, #141929 60%, #0d1220 100%);
+    border: 2px solid var(--card-border);
+    border-radius: 16px;
+    width: 300px;
+    max-width: 92vw;
+    padding: 20px 18px 18px;
+    position: relative;
+    transition: box-shadow 0.4s;
+  }
+  .card.win { box-shadow: var(--win-glow); border-color: var(--green); }
+  .card.lose { box-shadow: var(--lose-glow); border-color: var(--red); }
+
+  .card-team {
+    font-size: 0.7rem;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+  .card-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .card-pos {
+    font-size: 0.72rem;
+    color: var(--sub);
+    margin-bottom: 14px;
+  }
+  .card-emoji {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    font-size: 2.4rem;
+  }
+
+  .stats-list { display: flex; flex-direction: column; gap: 7px; }
+  .stat-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 9px 14px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text);
+    font-size: 0.9rem;
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    width: 100%;
+  }
+  .stat-btn:hover:not(:disabled) {
+    background: var(--btn-hover);
+    border-color: var(--accent);
+    transform: translateX(3px);
+  }
+  .stat-btn:disabled { cursor: default; opacity: 0.7; }
+  .stat-btn.selected {
+    border-color: var(--accent);
+    background: #2a3a6e;
+  }
+  .stat-btn.highlighted {
+    border-color: var(--accent);
+    background: #2a3a6e;
+  }
+  .stat-label { font-weight: 500; }
+  .stat-val {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1rem;
+    min-width: 38px;
+    text-align: right;
+  }
+  .stat-val.hidden-val { color: transparent; background: #2a3a6e; border-radius: 4px; min-width: 38px; }
+
+  .card-back {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 220px;
+    gap: 10px;
+  }
+  .card-back .card-back-icon { font-size: 3.5rem; }
+  .card-back .card-back-text { color: var(--sub); font-size: 0.85rem; }
+  .card-back .card-count {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent2);
+  }
+
+  #result-banner {
+    width: 100%;
+    max-width: 860px;
+    text-align: center;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 16px 4px;
+    min-height: 40px;
+    transition: all 0.3s;
+  }
+  #result-banner.win-banner { background: #1a4d2a; color: var(--green); border: 1px solid var(--green); }
+  #result-banner.lose-banner { background: #4d1a1a; color: var(--red); border: 1px solid var(--red); }
+  #result-banner.tie-banner { background: #2a2a1a; color: var(--accent); border: 1px solid var(--accent); }
+  #result-banner.neutral-banner { background: transparent; color: var(--sub); border: 1px solid transparent; }
+
+  #next-btn {
+    display: none;
+    margin: 6px auto 12px;
+    padding: 11px 36px;
+    background: linear-gradient(90deg, var(--accent) 0%, #e8920a 100%);
+    color: #000;
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 16px #f5a62355;
+  }
+  #next-btn:hover { transform: scale(1.05); box-shadow: 0 6px 22px #f5a62377; }
+
+  #game-over {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+    max-width: 480px;
+  }
+  #game-over h2 { font-size: 2.2rem; margin-bottom: 12px; }
+  #game-over p { color: var(--sub); margin-bottom: 24px; font-size: 1rem; }
+  #restart-btn {
+    padding: 12px 40px;
+    background: linear-gradient(90deg, var(--accent) 0%, #e8920a 100%);
+    color: #000;
+    font-weight: 700;
+    font-size: 1.05rem;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+  }
+  #restart-btn:hover { opacity: 0.9; }
+
+  #main-game { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+  .vs-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--accent);
+    padding-top: 60px;
+  }
+
+  @media (max-width: 680px) {
+    #arena { gap: 16px; }
+    .vs-divider { padding-top: 0; font-size: 1rem; }
+    .card { width: 280px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏀 Top Trumps: College Basketball 2025–26</h1>
+  <p>Top 10 Players of the Season · Pick your best stat to beat the computer!</p>
+</header>
+
+<div id="main-game">
+  <div id="scoreboard">
+    <div class="score-box">
+      <span class="label">Your Cards</span>
+      <span class="val" id="player-count">5</span>
+    </div>
+    <div class="score-box">
+      <span class="label">CPU Cards</span>
+      <span class="val" id="cpu-count">5</span>
+    </div>
+  </div>
+
+  <div id="turn-indicator">Your Turn — Choose a stat!</div>
+
+  <div id="result-banner" class="neutral-banner"> </div>
+
+  <div id="arena">
+    <div class="card-wrapper">
+      <span class="card-label">Your Card</span>
+      <div class="card" id="player-card"></div>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="card-wrapper">
+      <span class="card-label">CPU's Card</span>
+      <div class="card" id="cpu-card"></div>
+    </div>
+  </div>
+
+  <button id="next-btn" onclick="nextRound()">Next Round ▶</button>
+</div>
+
+<div id="game-over">
+  <h2 id="go-title"></h2>
+  <p id="go-sub"></p>
+  <button id="restart-btn" onclick="initGame()">Play Again 🏀</button>
+</div>
+
+<script>
+const PLAYERS = [
+  {
+    name: "AJ Dybantsa",
+    team: "BYU Cougars",
+    pos: "SF · Freshman",
+    emoji: "🌟",
+    ppg: 25.5,
+    apg: 3.7,
+    rpg: 6.8,
+    bpg: 0.3,
+    spg: 1.1
+  },
+  {
+    name: "Cameron Boozer",
+    team: "Duke Blue Devils",
+    pos: "PF · Freshman",
+    emoji: "👑",
+    ppg: 22.5,
+    apg: 4.1,
+    rpg: 10.2,
+    bpg: 0.6,
+    spg: 1.4
+  },
+  {
+    name: "JT Toppin",
+    team: "Texas Tech Red Raiders",
+    pos: "PF · Junior",
+    emoji: "💪",
+    ppg: 21.8,
+    apg: 2.1,
+    rpg: 10.8,
+    bpg: 1.7,
+    spg: 1.4
+  },
+  {
+    name: "Braden Smith",
+    team: "Purdue Boilermakers",
+    pos: "PG · Senior",
+    emoji: "🎯",
+    ppg: 14.0,
+    apg: 9.0,
+    rpg: 3.6,
+    bpg: 0.2,
+    spg: 2.2
+  },
+  {
+    name: "Darryn Peterson",
+    team: "Kansas Jayhawks",
+    pos: "G · Freshman",
+    emoji: "⚡",
+    ppg: 20.5,
+    apg: 1.7,
+    rpg: 4.2,
+    bpg: 0.3,
+    spg: 1.3
+  },
+  {
+    name: "Labaron Philon Jr.",
+    team: "Alabama Crimson Tide",
+    pos: "G · Sophomore",
+    emoji: "🔥",
+    ppg: 21.7,
+    apg: 4.7,
+    rpg: 3.2,
+    bpg: 0.2,
+    spg: 1.2
+  },
+  {
+    name: "Christian Anderson",
+    team: "Texas Tech Red Raiders",
+    pos: "PG · Junior",
+    emoji: "🃏",
+    ppg: 19.2,
+    apg: 7.8,
+    rpg: 3.7,
+    bpg: 0.1,
+    spg: 1.3
+  },
+  {
+    name: "Jeremy Fears Jr.",
+    team: "Michigan State Spartans",
+    pos: "PG · Sophomore",
+    emoji: "🦾",
+    ppg: 15.5,
+    apg: 9.1,
+    rpg: 2.4,
+    bpg: 0.2,
+    spg: 1.3
+  },
+  {
+    name: "Yaxel Lendeborg",
+    team: "Michigan Wolverines",
+    pos: "PF · Graduate",
+    emoji: "🛡️",
+    ppg: 14.3,
+    apg: 3.2,
+    rpg: 7.7,
+    bpg: 1.4,
+    spg: 1.3
+  },
+  {
+    name: "Caleb Wilson",
+    team: "North Carolina Tar Heels",
+    pos: "PF · Freshman",
+    emoji: "🌊",
+    ppg: 19.8,
+    apg: 2.7,
+    rpg: 9.4,
+    bpg: 0.8,
+    spg: 1.1
+  }
+];
+
+const STATS = [
+  { key: "ppg", label: "Points Per Game" },
+  { key: "apg", label: "Assists Per Game" },
+  { key: "rpg", label: "Rebounds Per Game" },
+  { key: "bpg", label: "Blocks Per Game" },
+  { key: "spg", label: "Steals Per Game" }
+];
+
+let playerDeck = [];
+let cpuDeck = [];
+let currentPlayerCard = null;
+let currentCpuCard = null;
+let isPlayerTurn = true;
+let roundInProgress = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function initGame() {
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('main-game').style.display = 'flex';
+  const shuffled = shuffle(PLAYERS);
+  playerDeck = shuffled.slice(0, 5);
+  cpuDeck = shuffled.slice(5, 10);
+  isPlayerTurn = true;
+  roundInProgress = false;
+  document.getElementById('next-btn').style.display = 'none';
+  setResultBanner('', 'neutral-banner');
+  startRound();
+}
+
+function startRound() {
+  currentPlayerCard = playerDeck[0];
+  currentCpuCard = cpuDeck[0];
+  updateScoreboard();
+  updateTurnIndicator();
+  renderPlayerCard(isPlayerTurn);
+  renderCpuCard(false);
+  document.getElementById('next-btn').style.display = 'none';
+  setResultBanner('', 'neutral-banner');
+
+  if (!isPlayerTurn) {
+    setTimeout(cpuTakeTurn, 900);
+  }
+}
+
+function updateScoreboard() {
+  document.getElementById('player-count').textContent = playerDeck.length;
+  document.getElementById('cpu-count').textContent = cpuDeck.length;
+}
+
+function updateTurnIndicator() {
+  const el = document.getElementById('turn-indicator');
+  if (isPlayerTurn) {
+    el.textContent = "🎮 Your Turn — Choose a stat!";
+    el.style.color = 'var(--accent)';
+    el.style.borderColor = 'var(--accent)';
+  } else {
+    el.textContent = "🤖 CPU's Turn — Thinking...";
+    el.style.color = 'var(--accent2)';
+    el.style.borderColor = 'var(--accent2)';
+  }
+}
+
+function renderPlayerCard(enableButtons) {
+  const card = currentPlayerCard;
+  const el = document.getElementById('player-card');
+  el.className = 'card';
+  el.innerHTML = `
+    <div class="card-team">${card.team}</div>
+    <div class="card-name">${card.name}</div>
+    <div class="card-pos">${card.pos}</div>
+    <div class="card-emoji">${card.emoji}</div>
+    <div class="stats-list">
+      ${STATS.map(s => `
+        <button class="stat-btn" data-key="${s.key}"
+          ${enableButtons ? '' : 'disabled'}
+          onclick="playerChoose('${s.key}')">
+          <span class="stat-label">${s.label}</span>
+          <span class="stat-val">${card[s.key].toFixed(1)}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderCpuCard(revealed, highlightKey) {
+  const card = currentCpuCard;
+  const el = document.getElementById('cpu-card');
+  el.className = 'card';
+  if (!revealed) {
+    el.innerHTML = `
+      <div class="card-team">${card.team}</div>
+      <div class="card-name">${card.name}</div>
+      <div class="card-pos">${card.pos}</div>
+      <div class="card-emoji">${card.emoji}</div>
+      <div class="stats-list">
+        ${STATS.map(s => `
+          <div class="stat-btn" style="cursor:default;">
+            <span class="stat-label">${s.label}</span>
+            <span class="stat-val hidden-val">?</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    el.innerHTML = `
+      <div class="card-team">${card.team}</div>
+      <div class="card-name">${card.name}</div>
+      <div class="card-pos">${card.pos}</div>
+      <div class="card-emoji">${card.emoji}</div>
+      <div class="stats-list">
+        ${STATS.map(s => `
+          <div class="stat-btn ${s.key === highlightKey ? 'highlighted' : ''}" style="cursor:default;">
+            <span class="stat-label">${s.label}</span>
+            <span class="stat-val">${card[s.key].toFixed(1)}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+}
+
+function playerChoose(statKey) {
+  if (!isPlayerTurn || roundInProgress) return;
+  roundInProgress = true;
+
+  // highlight selected button
+  document.querySelectorAll('#player-card .stat-btn').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.key === statKey) b.classList.add('selected');
+  });
+
+  setTimeout(() => {
+    renderCpuCard(true, statKey);
+    resolveRound(statKey);
+  }, 600);
+}
+
+function cpuTakeTurn() {
+  if (roundInProgress) return;
+  roundInProgress = true;
+
+  // CPU strategy: pick best stat for its own card
+  let bestKey = STATS[0].key;
+  let bestVal = currentCpuCard[bestKey];
+  STATS.forEach(s => {
+    if (currentCpuCard[s.key] > bestVal) {
+      bestVal = currentCpuCard[s.key];
+      bestKey = s.key;
+    }
+  });
+
+  // Highlight chosen stat in cpu card
+  renderCpuCard(true, bestKey);
+
+  // After reveal, show player card fully too
+  setTimeout(() => {
+    renderPlayerCard(false);
+    // Highlight the same stat on player card
+    document.querySelectorAll('#player-card .stat-btn').forEach(b => {
+      if (b.dataset.key === bestKey) b.classList.add('highlighted');
+    });
+    setTimeout(() => resolveRound(bestKey), 500);
+  }, 700);
+}
+
+function resolveRound(statKey) {
+  const pVal = currentPlayerCard[statKey];
+  const cVal = currentCpuCard[statKey];
+  const statLabel = STATS.find(s => s.key === statKey).label;
+
+  const playerCardEl = document.getElementById('player-card');
+  const cpuCardEl = document.getElementById('cpu-card');
+
+  if (pVal > cVal) {
+    playerCardEl.classList.add('win');
+    cpuCardEl.classList.add('lose');
+    setResultBanner(`🏆 You Win! ${currentPlayerCard.name} (${pVal.toFixed(1)}) beat ${currentCpuCard.name} (${cVal.toFixed(1)}) in ${statLabel}`, 'win-banner');
+    const won = cpuDeck.shift();
+    const yours = playerDeck.shift();
+    playerDeck.push(yours, won);
+    isPlayerTurn = true;
+  } else if (cVal > pVal) {
+    cpuCardEl.classList.add('win');
+    playerCardEl.classList.add('lose');
+    setResultBanner(`❌ CPU Wins! ${currentCpuCard.name} (${cVal.toFixed(1)}) beat ${currentPlayerCard.name} (${pVal.toFixed(1)}) in ${statLabel}`, 'lose-banner');
+    const won = playerDeck.shift();
+    const theirs = cpuDeck.shift();
+    cpuDeck.push(theirs, won);
+    isPlayerTurn = false;
+  } else {
+    setResultBanner(`🤝 Tie! Both players had ${pVal.toFixed(1)} ${statLabel} — cards go back`, 'tie-banner');
+    // Tie: rotate both decks
+    playerDeck.push(playerDeck.shift());
+    cpuDeck.push(cpuDeck.shift());
+    isPlayerTurn = !isPlayerTurn; // alternate on tie
+  }
+
+  updateScoreboard();
+
+  if (playerDeck.length === 0 || cpuDeck.length === 0) {
+    setTimeout(showGameOver, 1400);
+    return;
+  }
+
+  document.getElementById('next-btn').style.display = 'block';
+  roundInProgress = false;
+}
+
+function nextRound() {
+  roundInProgress = false;
+  startRound();
+}
+
+function setResultBanner(msg, cls) {
+  const el = document.getElementById('result-banner');
+  el.className = 'result-banner ' + cls;
+  // Add inline styles to ensure visibility
+  if (cls === 'win-banner') {
+    el.style.cssText = 'background:#1a4d2a;color:#43e97b;border:1px solid #43e97b;padding:10px;border-radius:10px;text-align:center;font-weight:600;font-size:1rem;width:100%;max-width:860px;margin:0 16px 4px;min-height:40px;';
+  } else if (cls === 'lose-banner') {
+    el.style.cssText = 'background:#4d1a1a;color:#f44336;border:1px solid #f44336;padding:10px;border-radius:10px;text-align:center;font-weight:600;font-size:1rem;width:100%;max-width:860px;margin:0 16px 4px;min-height:40px;';
+  } else if (cls === 'tie-banner') {
+    el.style.cssText = 'background:#2a2a1a;color:#f5a623;border:1px solid #f5a623;padding:10px;border-radius:10px;text-align:center;font-weight:600;font-size:1rem;width:100%;max-width:860px;margin:0 16px 4px;min-height:40px;';
+  } else {
+    el.style.cssText = 'background:transparent;color:transparent;border:1px solid transparent;padding:10px;border-radius:10px;min-height:40px;width:100%;max-width:860px;margin:0 16px 4px;';
+  }
+  el.textContent = msg;
+}
+
+function showGameOver() {
+  document.getElementById('main-game').style.display = 'none';
+  const go = document.getElementById('game-over');
+  go.style.display = 'block';
+  const title = document.getElementById('go-title');
+  const sub = document.getElementById('go-sub');
+  if (cpuDeck.length === 0) {
+    title.textContent = '🏆 You Win!';
+    title.style.color = 'var(--green)';
+    sub.textContent = 'You collected all 10 cards! You are the College Basketball Top Trumps champion!';
+  } else {
+    title.textContent = '😔 CPU Wins!';
+    title.style.color = 'var(--red)';
+    sub.textContent = 'The CPU collected all 10 cards. Better luck next time!';
+  }
+}
+
+// Start!
+initGame();
+</script>
+</body>
+</html>

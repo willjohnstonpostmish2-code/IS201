@@ -1,0 +1,69 @@
+/* BACKGROUND */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #002E5D;
+    color: white;
+}
+
+/* NAV BAR */
+.nav {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    padding: 15px;
+    background-color: #003DA5;
+}
+
+.nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.nav a:hover {
+    color: #FFD700;
+}
+
+/* HERO */
+.hero {
+    text-align: center;
+    padding: 50px;
+    background: linear-gradient(to right, #003DA5, #002E5D);
+}
+
+/* CONTENT SECTIONS */
+.section {
+    margin: 20px;
+    padding: 30px;
+    background-color: #001F3F;
+    border-radius: 10px;
+}
+
+/* IMAGE */
+img {
+    width: 300px;
+    border-radius: 10px;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: #003DA5;
+}
+
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid white;
+}
+
+/* FOOTER */
+.footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #003DA5;
+}
